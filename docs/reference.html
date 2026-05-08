@@ -1,0 +1,1145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Bodhi — Mock Interview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@300..600&display=swap"
+  rel="stylesheet"
+/>
+<style>
+  :root {
+    --bg:        #0a0a0b;
+    --bg-1:      #0f0f10;
+    --bg-2:      #141416;
+    --bg-3:      #1a1a1d;
+    --bg-hover:  #1f1f23;
+
+    --line:      #1f1f22;
+    --line-2:    #2a2a2f;
+
+    --fg:        #f5f5f6;
+    --fg-1:      #d4d4d6;
+    --fg-2:      #8a8a8f;
+    --fg-3:      #5a5a5f;
+    --fg-4:      #3a3a3f;
+
+    --accent:    #4d8dff;
+    --accent-2:  #2563eb;
+    --green:     #22c55e;
+    --red:       #ef4444;
+    --amber:     #f59e0b;
+
+    --r-s: 4px;
+    --r-m: 6px;
+    --r-l: 10px;
+
+    --header-h: 48px;
+    --rail-w:   48px;
+    --bodhi-w:  340px;
+    --problem-w: 36%;
+
+    --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --sans: "Geist", -apple-system, "Segoe UI", system-ui, sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%; overflow: hidden;
+  }
+  body {
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--fg);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    letter-spacing: -0.005em;
+  }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  ::selection { background: rgba(77, 141, 255, 0.3); }
+
+  /* ───── layout ───── */
+  .app {
+    height: 100vh;
+    display: grid;
+    grid-template-rows: var(--header-h) 1fr;
+  }
+
+  /* ───── topbar ───── */
+  .topbar {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 24px;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg);
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .brand .mark {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #fff, #c7c7cc);
+    color: #000;
+    display: grid; place-items: center;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: -0.04em;
+  }
+  .brand .div {
+    width: 1px; height: 14px;
+    background: var(--line-2);
+    margin: 0 4px;
+  }
+  .brand .scope {
+    color: var(--fg-2);
+    font-weight: 400;
+  }
+
+  .crumbs {
+    display: flex; align-items: center; gap: 8px;
+    color: var(--fg-2);
+    font-size: 12.5px;
+    justify-self: center;
+  }
+  .crumbs .sep { color: var(--fg-4); }
+  .crumbs .now { color: var(--fg); font-weight: 500; }
+
+  .top-right {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .top-right .timer {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--fg-1);
+    padding: 5px 10px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-m);
+    display: flex; align-items: center; gap: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+  .top-right .timer .lbl {
+    color: var(--fg-3);
+    font-family: var(--sans);
+    font-size: 11px;
+  }
+  .top-right .timer .total { color: var(--fg-3); }
+  .iconbtn {
+    width: 28px; height: 28px;
+    border-radius: var(--r-m);
+    color: var(--fg-2);
+    display: grid; place-items: center;
+    transition: background 0.12s ease, color 0.12s ease;
+  }
+  .iconbtn:hover { background: var(--bg-hover); color: var(--fg); }
+  .ghostbtn {
+    height: 28px;
+    padding: 0 12px;
+    border-radius: var(--r-m);
+    border: 1px solid var(--line-2);
+    color: var(--fg-1);
+    font-size: 12px;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: background 0.12s ease, border-color 0.12s ease;
+  }
+  .ghostbtn:hover { background: var(--bg-hover); border-color: var(--fg-3); }
+
+  /* ───── main ───── */
+  .main {
+    display: grid;
+    grid-template-columns: var(--rail-w) var(--problem-w) 1fr var(--bodhi-w);
+    overflow: hidden;
+  }
+
+  /* ───── rail ───── */
+  .rail {
+    border-right: 1px solid var(--line);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 8px 0;
+    gap: 2px;
+  }
+  .rail .tab {
+    width: 36px; height: 36px;
+    border-radius: var(--r-m);
+    color: var(--fg-3);
+    display: grid; place-items: center;
+    transition: background 0.12s ease, color 0.12s ease;
+    position: relative;
+  }
+  .rail .tab:hover { background: var(--bg-hover); color: var(--fg-1); }
+  .rail .tab.active { color: var(--fg); background: var(--bg-2); }
+  .rail .tab.active::after {
+    content: "";
+    position: absolute;
+    left: -8px;
+    top: 8px; bottom: 8px;
+    width: 2px;
+    background: var(--fg);
+    border-radius: 2px;
+  }
+  .rail .spacer { flex: 1; }
+
+  /* ───── problem column ───── */
+  .problem {
+    border-right: 1px solid var(--line);
+    background: var(--bg);
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+    overflow: hidden;
+  }
+  .problem-tabs {
+    display: flex; align-items: center;
+    gap: 18px;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--line);
+    height: 40px;
+  }
+  .problem-tabs .ptab {
+    color: var(--fg-2);
+    font-size: 12.5px;
+    height: 100%;
+    display: flex; align-items: center;
+    border-bottom: 1px solid transparent;
+    transition: color 0.12s ease;
+  }
+  .problem-tabs .ptab:hover { color: var(--fg-1); }
+  .problem-tabs .ptab.active {
+    color: var(--fg);
+    border-bottom-color: var(--fg);
+  }
+  .problem-tabs .ptab .badge {
+    margin-left: 6px;
+    font-size: 10.5px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: var(--bg-3);
+    color: var(--fg-2);
+  }
+
+  .problem-head {
+    padding: 22px 24px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .problem-head .row {
+    display: flex; align-items: center; gap: 8px;
+    color: var(--fg-3);
+    font-family: var(--mono);
+    font-size: 11px;
+    margin-bottom: 10px;
+  }
+  .problem-head .row .num { color: var(--fg-1); }
+  .problem-head h1 {
+    margin: 0 0 12px;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--fg);
+  }
+  .pill {
+    display: inline-flex; align-items: center;
+    gap: 6px;
+    padding: 2px 8px;
+    border-radius: var(--r-s);
+    font-size: 11px;
+    color: var(--fg-1);
+    border: 1px solid var(--line-2);
+    font-family: var(--mono);
+    background: var(--bg-1);
+  }
+  .pill.med { color: var(--amber); border-color: rgba(245, 158, 11, 0.25); background: rgba(245, 158, 11, 0.06); }
+  .pill.tag { color: var(--fg-2); }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    align-items: center;
+  }
+  .meta .stat {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-3);
+  }
+  .meta .stat b { color: var(--fg-1); font-weight: 500; }
+
+  .problem-body {
+    overflow-y: auto;
+    padding: 22px 24px 80px;
+    color: var(--fg-1);
+    font-size: 13.5px;
+    line-height: 1.65;
+    scrollbar-width: thin;
+    scrollbar-color: var(--bg-3) transparent;
+  }
+  .problem-body::-webkit-scrollbar { width: 8px; }
+  .problem-body::-webkit-scrollbar-thumb { background: var(--bg-3); border-radius: 4px; }
+  .problem-body p { margin: 0 0 14px; }
+  .problem-body code {
+    font-family: var(--mono);
+    font-size: 0.86em;
+    background: var(--bg-2);
+    color: var(--fg);
+    padding: 1px 5px;
+    border-radius: var(--r-s);
+    border: 1px solid var(--line);
+  }
+  .problem-body strong { color: var(--fg); font-weight: 500; }
+
+  .h2 {
+    margin: 26px 0 10px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--fg-2);
+    display: flex; align-items: center;
+    gap: 8px;
+  }
+  .h2::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  .ex {
+    border: 1px solid var(--line);
+    border-radius: var(--r-m);
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    background: var(--bg-1);
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.55;
+  }
+  .ex .erow {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    gap: 10px;
+    padding: 3px 0;
+  }
+  .ex .erow + .erow { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 7px; }
+  .ex .k { color: var(--fg-3); font-size: 11px; align-self: center; }
+  .ex .v { color: var(--fg); }
+  .ex .v.note { font-family: var(--sans); color: var(--fg-2); font-size: 12.5px; }
+
+  .constraints {
+    list-style: none;
+    margin: 0; padding: 0;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--fg-1);
+  }
+  .constraints li {
+    padding: 5px 0 5px 14px;
+    position: relative;
+    border-bottom: 1px solid var(--line);
+  }
+  .constraints li:last-child { border-bottom: 0; }
+  .constraints li::before {
+    content: "";
+    position: absolute; left: 0; top: 13px;
+    width: 4px; height: 4px;
+    background: var(--fg-3);
+    border-radius: 50%;
+  }
+
+  /* ───── code lab ───── */
+  .lab {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    background: var(--bg);
+    overflow: hidden;
+  }
+  .lab-bar {
+    height: 40px;
+    display: flex; align-items: center;
+    border-bottom: 1px solid var(--line);
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .filetabs { display: flex; gap: 2px; margin-right: auto; height: 100%; align-items: stretch; }
+  .filetab {
+    padding: 0 12px;
+    display: inline-flex; align-items: center; gap: 8px;
+    color: var(--fg-3);
+    font-family: var(--mono);
+    font-size: 12px;
+    border-bottom: 1px solid transparent;
+    transition: color 0.12s ease;
+  }
+  .filetab:hover { color: var(--fg-1); }
+  .filetab.active { color: var(--fg); border-bottom-color: var(--fg); }
+  .filetab .x { color: var(--fg-3); font-size: 14px; line-height: 1; padding: 2px; }
+  .filetab .x:hover { color: var(--fg); }
+  .filetab .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+  .lang {
+    height: 28px;
+    appearance: none;
+    background: var(--bg-1);
+    color: var(--fg-1);
+    border: 1px solid var(--line-2);
+    padding: 0 26px 0 10px;
+    border-radius: var(--r-m);
+    font-family: var(--mono);
+    font-size: 12px;
+    background-image:
+      linear-gradient(45deg, transparent 50%, var(--fg-3) 50%),
+      linear-gradient(-45deg, transparent 50%, var(--fg-3) 50%);
+    background-position: calc(100% - 13px) 50%, calc(100% - 9px) 50%;
+    background-size: 4px 4px, 4px 4px;
+    background-repeat: no-repeat;
+  }
+
+  .editor-wrap { position: relative; overflow: hidden; }
+  .editor {
+    height: 100%;
+    overflow: auto;
+    padding: 10px 0;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.65;
+    background: var(--bg);
+    scrollbar-width: thin;
+    scrollbar-color: var(--bg-3) transparent;
+  }
+  .editor::-webkit-scrollbar { width: 10px; height: 10px; }
+  .editor::-webkit-scrollbar-thumb { background: var(--bg-3); border-radius: 4px; }
+  .code {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    min-width: 100%;
+  }
+  .gutter {
+    text-align: right;
+    padding: 0 12px 0 0;
+    color: var(--fg-4);
+    user-select: none;
+    font-variant-numeric: tabular-nums;
+  }
+  .gutter .ln { display: block; height: 1.65em; }
+  .gutter .ln.cursor { color: var(--fg); }
+  .codearea {
+    padding: 0 18px;
+    white-space: pre;
+    color: var(--fg);
+    position: relative;
+  }
+  .codearea .row { display: block; height: 1.65em; }
+  .codearea .row.active {
+    background: var(--bg-1);
+  }
+
+  /* understated syntax */
+  .tok-kw  { color: #c084fc; }
+  .tok-fn  { color: #4d8dff; }
+  .tok-cls { color: #38bdf8; }
+  .tok-str { color: #84cc16; }
+  .tok-num { color: #f59e0b; }
+  .tok-com { color: var(--fg-3); }
+  .tok-op  { color: var(--fg-2); }
+  .tok-var { color: var(--fg); }
+  .tok-self { color: #ef4444; }
+  .tok-deco { color: var(--amber); }
+
+  .caret {
+    display: inline-block;
+    width: 1.5px;
+    height: 1em;
+    background: var(--accent);
+    transform: translateY(2px);
+    margin-left: 1px;
+    animation: blink 1s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .lab-foot {
+    display: flex; align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-top: 1px solid var(--line);
+    background: var(--bg);
+  }
+  .checkrow {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--fg-2);
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .check {
+    width: 14px; height: 14px;
+    border-radius: 3px;
+    border: 1px solid var(--line-2);
+    background: var(--bg-1);
+    display: grid; place-items: center;
+  }
+  .check.on { background: var(--accent); border-color: var(--accent); }
+  .check.on::after {
+    content: "";
+    width: 6px; height: 3px;
+    border-left: 1.5px solid white;
+    border-bottom: 1.5px solid white;
+    transform: rotate(-45deg) translate(0px, -1px);
+  }
+
+  .lab-foot .spacer { flex: 1; }
+  .runbtn, .submitbtn {
+    height: 28px;
+    padding: 0 14px;
+    border-radius: var(--r-m);
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: background 0.12s ease, border-color 0.12s ease;
+  }
+  .runbtn {
+    color: var(--fg);
+    border: 1px solid var(--line-2);
+    background: var(--bg-1);
+  }
+  .runbtn:hover { background: var(--bg-hover); border-color: var(--fg-3); }
+  .submitbtn {
+    color: var(--bg);
+    background: var(--fg);
+    border: 1px solid var(--fg);
+  }
+  .submitbtn:hover { background: #fff; }
+
+  .kbd {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--fg-3);
+    border: 1px solid var(--line-2);
+    background: var(--bg-1);
+    padding: 0 5px;
+    border-radius: 3px;
+    margin-left: 2px;
+    line-height: 16px;
+  }
+
+  .row-status {
+    height: 24px;
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 12px;
+    border-top: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-3);
+    background: var(--bg-1);
+  }
+  .row-status b { color: var(--fg-1); font-weight: 400; }
+  .row-status .live {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--green);
+    margin-left: auto;
+  }
+  .row-status .live .d {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+  }
+
+  /* ───── bodhi panel ───── */
+  .bodhi {
+    border-left: 1px solid var(--line);
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    overflow: hidden;
+    background: var(--bg);
+  }
+  .bodhi-head {
+    height: 40px;
+    display: flex; align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--line);
+    font-size: 12px;
+  }
+  .bodhi-head .ttl {
+    display: flex; align-items: center; gap: 8px;
+    color: var(--fg-1);
+    font-weight: 500;
+  }
+  .bodhi-head .ttl .live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: livePulse 2s ease-in-out infinite;
+  }
+  @keyframes livePulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  .bodhi-head .meta-r {
+    color: var(--fg-3);
+    font-family: var(--mono);
+    font-size: 11px;
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .agent {
+    padding: 22px 20px 14px;
+    display: flex;
+    flex-direction: column; align-items: center;
+    text-align: center;
+    border-bottom: 1px solid var(--line);
+  }
+  .avatar-wrap {
+    position: relative;
+    width: 96px; height: 96px;
+  }
+  .avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--bg-2);
+    border: 1px solid var(--line-2);
+  }
+  .avatar img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: 50% 28%;
+    transform: scale(1.55);
+    transform-origin: 50% 30%;
+  }
+  .avatar-wrap .ring {
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    border: 1px solid var(--accent);
+    opacity: 0.6;
+    animation: ringPulse 2.4s ease-out infinite;
+  }
+  @keyframes ringPulse {
+    0% { transform: scale(0.96); opacity: 0.7; }
+    100% { transform: scale(1.18); opacity: 0; }
+  }
+
+  .agent-name {
+    margin-top: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .agent-role {
+    margin-top: 2px;
+    color: var(--fg-3);
+    font-size: 11.5px;
+  }
+
+  .status {
+    margin-top: 12px;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--line-2);
+    background: var(--bg-1);
+    font-size: 11.5px;
+    color: var(--fg-1);
+  }
+  .status .pulse {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 0 var(--accent);
+    animation: dotPulse 1.6s ease-out infinite;
+  }
+  @keyframes dotPulse {
+    0% { box-shadow: 0 0 0 0 rgba(77, 141, 255, 0.5); }
+    100% { box-shadow: 0 0 0 8px rgba(77, 141, 255, 0); }
+  }
+  .status .obj { color: var(--fg-3); }
+
+  .wave {
+    margin-top: 14px;
+    height: 24px;
+    width: 100%;
+    display: flex; align-items: center; justify-content: center;
+    gap: 2px;
+  }
+  .wave i {
+    display: block;
+    width: 2px;
+    border-radius: 2px;
+    background: var(--accent);
+    height: 4px;
+    transform-origin: center;
+    animation: wave 1.1s ease-in-out infinite;
+    opacity: 0.85;
+  }
+  @keyframes wave {
+    0%, 100% { transform: scaleY(0.25); }
+    50% { transform: scaleY(1); }
+  }
+
+  /* transcript */
+  .transcript {
+    overflow-y: auto;
+    padding: 14px 16px 8px;
+    display: flex; flex-direction: column;
+    gap: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--bg-3) transparent;
+  }
+  .transcript::-webkit-scrollbar { width: 6px; }
+  .transcript::-webkit-scrollbar-thumb { background: var(--bg-3); border-radius: 4px; }
+
+  .msg {
+    animation: rise 0.35s ease both;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .msg .who {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--fg-3);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .msg .who .ts {
+    font-family: var(--mono);
+    color: var(--fg-4);
+  }
+  .msg.bodhi .who { color: var(--accent); }
+  .msg.iv .who { color: var(--fg-2); }
+  .msg .body { color: var(--fg); }
+  .msg.iv .body { color: var(--fg-2); }
+  .msg .body code {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--bg-2);
+    color: var(--fg);
+    padding: 1px 5px;
+    border-radius: 3px;
+    border: 1px solid var(--line);
+  }
+
+  /* controls */
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 6px;
+    padding: 10px 12px 12px;
+    border-top: 1px solid var(--line);
+  }
+  .ctlbtn {
+    height: 36px;
+    border-radius: var(--r-m);
+    color: var(--fg-1);
+    border: 1px solid var(--line-2);
+    background: var(--bg-1);
+    display: flex; align-items: center; justify-content: center;
+    gap: 6px;
+    font-size: 11.5px;
+    transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+  }
+  .ctlbtn:hover { background: var(--bg-hover); border-color: var(--fg-3); color: var(--fg); }
+  .ctlbtn.muted { color: var(--amber); border-color: rgba(245, 158, 11, 0.35); background: rgba(245, 158, 11, 0.05); }
+  .ctlbtn.end {
+    color: white;
+    background: var(--red);
+    border-color: var(--red);
+  }
+  .ctlbtn.end:hover { background: #dc2626; border-color: #dc2626; }
+
+  .hint {
+    margin: 24px 0 0;
+    padding: 12px 14px;
+    border-radius: var(--r-m);
+    border: 1px solid var(--line);
+    background: var(--bg-1);
+  }
+  .hint .h {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--fg-2);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .hint .h .d { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+  .hint .b { color: var(--fg-1); font-size: 13px; line-height: 1.55; }
+  .hint .b em { color: var(--fg); font-style: normal; font-weight: 500; }
+
+  @media (max-width: 1280px) {
+    :root { --bodhi-w: 300px; --problem-w: 34%; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- topbar -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="mark">B</div>
+      <div>bodhi</div>
+      <div class="div"></div>
+      <div class="scope">Mock Interview · Session #024</div>
+    </div>
+    <nav class="crumbs">
+      <span>Algorithms</span>
+      <span class="sep">/</span>
+      <span>Strings</span>
+      <span class="sep">/</span>
+      <span class="now">Longest Substring Without Repeating Characters</span>
+    </nav>
+    <div class="top-right">
+      <div class="timer">
+        <span class="lbl">Elapsed</span>
+        <span><b id="t-mm">02</b>:<b id="t-ss">14</b></span>
+        <span class="total">/ 45:00</span>
+      </div>
+      <button class="iconbtn" title="Theme">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      </button>
+      <button class="iconbtn" title="Settings">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 00.3 1.7l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-1.7-.3 1.6 1.6 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.6 1.6 0 00-1-1.5 1.6 1.6 0 00-1.7.3l-.1.1A2 2 0 113.5 17l.1-.1a1.6 1.6 0 00.3-1.7 1.6 1.6 0 00-1.5-1H2a2 2 0 110-4h.1a1.6 1.6 0 001.5-1 1.6 1.6 0 00-.3-1.7l-.1-.1A2 2 0 117 4.5l.1.1a1.6 1.6 0 001.7.3H9a1.6 1.6 0 001-1.5V3a2 2 0 114 0v.1a1.6 1.6 0 001 1.5 1.6 1.6 0 001.7-.3l.1-.1A2 2 0 1119.6 7l-.1.1a1.6 1.6 0 00-.3 1.7v.1a1.6 1.6 0 001.5 1H21a2 2 0 110 4h-.1a1.6 1.6 0 00-1.5 1z"/></svg>
+      </button>
+      <button class="ghostbtn">Exit Session</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <!-- rail -->
+    <aside class="rail">
+      <button class="tab active" title="Problem">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 4h11l4 4v12H5z"/><path d="M16 4v4h4"/></svg>
+      </button>
+      <button class="tab" title="Submissions">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h10M4 18h16"/></svg>
+      </button>
+      <button class="tab" title="Notes">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 21V9l5-5h13v17z"/><path d="M8 4v5H3"/></svg>
+      </button>
+      <button class="tab" title="Discussions">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      </button>
+      <button class="tab" title="Console">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h16v16H4z"/><path d="M7 9l3 3-3 3M13 15h4"/></svg>
+      </button>
+      <div class="spacer"></div>
+      <button class="tab" title="Help">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 015 0c0 1.5-2.5 2-2.5 3.5M12 17h.01"/></svg>
+      </button>
+    </aside>
+
+    <!-- problem -->
+    <section class="problem">
+      <nav class="problem-tabs">
+        <button class="ptab active">Description</button>
+        <button class="ptab">Examples</button>
+        <button class="ptab">Solution <span class="badge">locked</span></button>
+        <button class="ptab">Discussion <span class="badge">82</span></button>
+      </nav>
+
+      <header class="problem-head">
+        <div class="row">
+          <span class="num">#003</span>
+          <span>·</span>
+          <span>Round 02 of 03</span>
+          <span>·</span>
+          <span>Live Coding</span>
+        </div>
+        <h1>Longest Substring Without Repeating Characters</h1>
+        <div class="meta">
+          <span class="pill med">Medium</span>
+          <span class="pill tag">sliding-window</span>
+          <span class="pill tag">hash-map</span>
+          <span class="pill tag">string</span>
+          <span class="stat">acc <b>33.7%</b></span>
+          <span class="stat">avg <b>14m</b></span>
+          <span class="stat">solved <b>1.2M</b></span>
+        </div>
+      </header>
+
+      <div class="problem-body">
+        <p>Given a string <code>s</code>, return the length of the <strong>longest substring</strong> without duplicate characters. The substring must be <strong>contiguous</strong> in the original string.</p>
+        <p>Your interviewer is looking for a clean linear-time solution and a clear narration of the invariants you maintain as the window slides.</p>
+
+        <div class="h2">Examples</div>
+
+        <div class="ex">
+          <div class="erow"><span class="k">Input</span><span class="v">s = "abcabcbb"</span></div>
+          <div class="erow"><span class="k">Output</span><span class="v">3</span></div>
+          <div class="erow"><span class="k">Note</span><span class="v note">The answer is "abc"; once we see the second 'a', the window slides forward.</span></div>
+        </div>
+
+        <div class="ex">
+          <div class="erow"><span class="k">Input</span><span class="v">s = "bbbbb"</span></div>
+          <div class="erow"><span class="k">Output</span><span class="v">1</span></div>
+          <div class="erow"><span class="k">Note</span><span class="v note">A run of identical characters yields a window of length one.</span></div>
+        </div>
+
+        <div class="ex">
+          <div class="erow"><span class="k">Input</span><span class="v">s = "pwwkew"</span></div>
+          <div class="erow"><span class="k">Output</span><span class="v">3</span></div>
+          <div class="erow"><span class="k">Note</span><span class="v note">"wke" is a substring; "pwke" is a subsequence and does not count.</span></div>
+        </div>
+
+        <div class="h2">Constraints</div>
+        <ul class="constraints">
+          <li>0 ≤ s.length ≤ 5 × 10⁴</li>
+          <li>s consists of English letters, digits, symbols and spaces</li>
+          <li>Time limit: 1s · Memory: 256 MB</li>
+          <li>Expected: <code>O(n)</code> time, <code>O(Σ)</code> space</li>
+        </ul>
+
+        <div class="h2">Follow-up</div>
+        <p>If <code>s</code> contained Unicode codepoints rather than just ASCII, would your solution still be linear? What would change about the auxiliary structure?</p>
+
+        <div class="hint">
+          <div class="h"><span class="d"></span>Hint from Bodhi</div>
+          <div class="b">Two pointers in lockstep — the right hand expands; the left hand catches up only when a duplicate enters the window. The width at every step is your candidate for <em>best</em>.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- code lab -->
+    <section class="lab">
+      <div class="lab-bar">
+        <div class="filetabs">
+          <div class="filetab active">
+            <span class="dot"></span>solution.py
+            <button class="x" title="Close">×</button>
+          </div>
+          <div class="filetab">
+            tests.py
+            <button class="x">×</button>
+          </div>
+          <button class="iconbtn" title="New tab" style="align-self:center">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>
+        <select class="lang">
+          <option>Python 3.12</option>
+          <option>C++17</option>
+          <option>Go 1.22</option>
+          <option>TypeScript</option>
+          <option>Rust</option>
+          <option>Java 21</option>
+        </select>
+        <button class="iconbtn" title="Format">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 6h16M4 12h12M4 18h8"/></svg>
+        </button>
+        <button class="iconbtn" title="Fullscreen">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+        </button>
+      </div>
+
+      <div class="editor-wrap">
+        <div class="editor">
+          <div class="code">
+<div class="gutter">
+<span class="ln">1</span><span class="ln">2</span><span class="ln">3</span><span class="ln">4</span><span class="ln">5</span><span class="ln">6</span><span class="ln">7</span><span class="ln">8</span><span class="ln">9</span><span class="ln">10</span><span class="ln">11</span><span class="ln">12</span><span class="ln">13</span><span class="ln">14</span><span class="ln cursor">15</span><span class="ln">16</span><span class="ln">17</span><span class="ln">18</span><span class="ln">19</span><span class="ln">20</span><span class="ln">21</span><span class="ln">22</span><span class="ln">23</span><span class="ln">24</span>
+</div>
+<div class="codearea"><span class="row"><span class="tok-com"># interview · longest substring without repeating characters</span></span><span class="row"><span class="tok-com"># sliding-window narration enabled</span></span><span class="row"></span><span class="row"><span class="tok-kw">from</span> <span class="tok-cls">collections</span> <span class="tok-kw">import</span> <span class="tok-cls">defaultdict</span></span><span class="row"></span><span class="row"></span><span class="row"><span class="tok-kw">class</span> <span class="tok-cls">Solution</span><span class="tok-op">:</span></span><span class="row">    <span class="tok-kw">def</span> <span class="tok-fn">lengthOfLongestSubstring</span><span class="tok-op">(</span><span class="tok-self">self</span><span class="tok-op">,</span> s<span class="tok-op">:</span> <span class="tok-cls">str</span><span class="tok-op">)</span> <span class="tok-op">-&gt;</span> <span class="tok-cls">int</span><span class="tok-op">:</span></span><span class="row">        <span class="tok-com"># last[c] stores the most recent index of c</span></span><span class="row">        last <span class="tok-op">=</span> <span class="tok-fn">defaultdict</span><span class="tok-op">(</span><span class="tok-kw">lambda</span><span class="tok-op">:</span> <span class="tok-num">-1</span><span class="tok-op">)</span></span><span class="row">        left <span class="tok-op">=</span> <span class="tok-num">0</span></span><span class="row">        best <span class="tok-op">=</span> <span class="tok-num">0</span></span><span class="row"></span><span class="row"><span class="tok-com">        # invariant: s[left..right] holds no duplicates</span></span><span class="row active">        <span class="tok-kw">for</span> right<span class="tok-op">,</span> ch <span class="tok-kw">in</span> <span class="tok-fn">enumerate</span><span class="tok-op">(</span>s<span class="tok-op">)</span><span class="tok-op">:</span><span class="caret"></span></span><span class="row">            <span class="tok-kw">if</span> last<span class="tok-op">[</span>ch<span class="tok-op">]</span> <span class="tok-op">&gt;=</span> left<span class="tok-op">:</span></span><span class="row">                left <span class="tok-op">=</span> last<span class="tok-op">[</span>ch<span class="tok-op">]</span> <span class="tok-op">+</span> <span class="tok-num">1</span></span><span class="row">            last<span class="tok-op">[</span>ch<span class="tok-op">]</span> <span class="tok-op">=</span> right</span><span class="row">            best <span class="tok-op">=</span> <span class="tok-fn">max</span><span class="tok-op">(</span>best<span class="tok-op">,</span> right <span class="tok-op">-</span> left <span class="tok-op">+</span> <span class="tok-num">1</span><span class="tok-op">)</span></span><span class="row"></span><span class="row">        <span class="tok-kw">return</span> best</span><span class="row"></span><span class="row"><span class="tok-kw">if</span> <span class="tok-self">__name__</span> <span class="tok-op">==</span> <span class="tok-str">"__main__"</span><span class="tok-op">:</span></span><span class="row">    <span class="tok-fn">print</span><span class="tok-op">(</span><span class="tok-cls">Solution</span><span class="tok-op">().</span><span class="tok-fn">lengthOfLongestSubstring</span><span class="tok-op">(</span><span class="tok-str">"pwwkew"</span><span class="tok-op">))</span></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lab-foot">
+        <button class="ghostbtn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v12M7 8l5-5 5 5M5 21h14"/></svg>
+          Upload File
+        </button>
+        <label class="checkrow">
+          <span class="check on"></span>
+          Test against custom input
+        </label>
+        <span class="spacer"></span>
+        <button class="runbtn">
+          Run
+          <span class="kbd">⌘↵</span>
+        </button>
+        <button class="submitbtn">
+          Submit
+          <span class="kbd" style="background:rgba(255,255,255,0.15); border-color:rgba(255,255,255,0.25); color:rgba(0,0,0,0.6)">⇧⌘↵</span>
+        </button>
+      </div>
+
+      <div class="row-status">
+        <span><b>Python 3.12</b></span>
+        <span>UTF-8</span>
+        <span>LF</span>
+        <span>Spaces · 4</span>
+        <span>Ln <b>15</b>, Col <b>34</b></span>
+        <span class="live"><span class="d"></span>Connected</span>
+      </div>
+    </section>
+
+    <!-- bodhi panel -->
+    <aside class="bodhi">
+      <header class="bodhi-head">
+        <div class="ttl"><span class="live-dot"></span>Bodhi · Voice Agent</div>
+        <div class="meta-r">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 18l4-3 5 5 9-9"/></svg>
+          48 kHz · HD
+        </div>
+      </header>
+
+      <section class="agent">
+        <div class="avatar-wrap">
+          <span class="ring"></span>
+          <div class="avatar"><img src="bodhi_with_avatar.png" alt="Bodhi" /></div>
+        </div>
+        <div class="agent-name">Bodhi</div>
+        <div class="agent-role">Senior IC · Interviewee</div>
+
+        <div class="status">
+          <span class="pulse"></span>
+          <span><b id="statusVerb">Speaking</b></span>
+          <span class="obj" id="statusObj">narrating sliding window</span>
+        </div>
+
+        <div class="wave" aria-hidden="true">
+          <i style="animation-delay:.00s"></i><i style="animation-delay:.05s"></i>
+          <i style="animation-delay:.10s"></i><i style="animation-delay:.15s"></i>
+          <i style="animation-delay:.20s"></i><i style="animation-delay:.25s"></i>
+          <i style="animation-delay:.30s"></i><i style="animation-delay:.35s"></i>
+          <i style="animation-delay:.40s"></i><i style="animation-delay:.45s"></i>
+          <i style="animation-delay:.50s"></i><i style="animation-delay:.55s"></i>
+          <i style="animation-delay:.60s"></i><i style="animation-delay:.65s"></i>
+          <i style="animation-delay:.70s"></i><i style="animation-delay:.75s"></i>
+          <i style="animation-delay:.80s"></i><i style="animation-delay:.85s"></i>
+          <i style="animation-delay:.90s"></i><i style="animation-delay:.95s"></i>
+          <i style="animation-delay:1.00s"></i><i style="animation-delay:1.05s"></i>
+          <i style="animation-delay:1.10s"></i><i style="animation-delay:1.15s"></i>
+          <i style="animation-delay:1.20s"></i><i style="animation-delay:1.25s"></i>
+          <i style="animation-delay:1.30s"></i><i style="animation-delay:1.35s"></i>
+          <i style="animation-delay:1.40s"></i><i style="animation-delay:1.45s"></i>
+        </div>
+      </section>
+
+      <div class="transcript" id="transcript">
+        <div class="msg iv">
+          <div class="who">Interviewer<span>·</span><span class="ts">02:01</span></div>
+          <div class="body">Could you walk me through your approach before you start typing?</div>
+        </div>
+        <div class="msg bodhi">
+          <div class="who">Bodhi<span>·</span><span class="ts">02:08</span></div>
+          <div class="body">I'll use a sliding window. I keep a map from character to its most recent index, and a left pointer that marks the window's start.</div>
+        </div>
+        <div class="msg bodhi">
+          <div class="who">Bodhi<span>·</span><span class="ts">02:24</span></div>
+          <div class="body">The invariant is that between <code>left</code> and <code>right</code>, every character is unique. The width <code>right − left + 1</code> is the candidate for <code>best</code>.</div>
+        </div>
+        <div class="msg iv">
+          <div class="who">Interviewer<span>·</span><span class="ts">02:39</span></div>
+          <div class="body">What's the time complexity?</div>
+        </div>
+        <div class="msg bodhi">
+          <div class="who">Bodhi<span>·</span><span class="ts">02:46</span></div>
+          <div class="body">Linear — <code>O(n)</code>, since each pointer only moves forward. Space is bounded by the alphabet size.</div>
+        </div>
+      </div>
+
+      <footer class="controls">
+        <button class="ctlbtn" id="muteBtn" title="Mute mic">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0014 0M12 19v3"/></svg>
+          Mute
+        </button>
+        <button class="ctlbtn" title="Captions">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 11h2M14 11h2M8 15h3M13 15h3"/></svg>
+          CC
+        </button>
+        <button class="ctlbtn" title="Settings">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="2.5"/><path d="M19.4 12a7.4 7.4 0 00-.1-1.2l2-1.5-2-3.4-2.4.9a7 7 0 00-2-1.2L14 3h-4l-.5 2.6a7 7 0 00-2 1.2l-2.4-.9-2 3.4 2 1.5"/></svg>
+          Audio
+        </button>
+        <button class="ctlbtn end" title="End call">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 16c4-5 16-5 20 0l-2 2-3-1-1-3a14 14 0 00-8 0l-1 3-3 1z"/></svg>
+          End
+        </button>
+      </footer>
+    </aside>
+  </main>
+</div>
+
+<script>
+  // timer
+  let s = 134;
+  const tmm = document.getElementById("t-mm");
+  const tss = document.getElementById("t-ss");
+  setInterval(() => {
+    s++;
+    tmm.textContent = String(Math.floor(s / 60)).padStart(2, "0");
+    tss.textContent = String(s % 60).padStart(2, "0");
+  }, 1000);
+
+  // status verbs
+  const verbs = [
+    ["Speaking", "narrating sliding window"],
+    ["Thinking", "weighing hash vs. set"],
+    ["Listening", "to follow-up question"],
+    ["Speaking", "explaining O(n) bound"],
+    ["Thinking", "considering Unicode case"],
+  ];
+  let vi = 0;
+  setInterval(() => {
+    vi = (vi + 1) % verbs.length;
+    document.getElementById("statusVerb").textContent = verbs[vi][0];
+    document.getElementById("statusObj").textContent = verbs[vi][1];
+  }, 4200);
+
+  // live transcript
+  const tx = document.getElementById("transcript");
+  function nowts() {
+    const sec = 134 + Math.floor((Date.now() - start) / 1000);
+    return `${String(Math.floor(sec/60)).padStart(2,"0")}:${String(sec%60).padStart(2,"0")}`;
+  }
+  const start = Date.now();
+  const lines = [
+    { who:"bodhi", label:"Bodhi", html:'On <code>"pwwkew"</code> the window grows to "pw", hits a duplicate at the second w, then jumps left past it.' },
+    { who:"iv", label:"Interviewer", html:"Could you also handle a streaming version where input arrives one char at a time?" },
+    { who:"bodhi", label:"Bodhi", html:"Yes — the algorithm is already incremental. I'd expose a <code>step(ch)</code> method that returns the current best." },
+    { who:"bodhi", label:"Bodhi", html:"Should I write that variant, or stay focused on the original prompt?" },
+  ];
+  let li = 0;
+  function pushLine() {
+    if (li >= lines.length) return;
+    const l = lines[li++];
+    const div = document.createElement("div");
+    div.className = "msg " + l.who;
+    div.innerHTML = `<div class="who">${l.label}<span>·</span><span class="ts">${nowts()}</span></div><div class="body">${l.html}</div>`;
+    tx.appendChild(div);
+    tx.scrollTo({ top: tx.scrollHeight, behavior: "smooth" });
+  }
+  setTimeout(pushLine, 2400);
+  setTimeout(pushLine, 6800);
+  setTimeout(pushLine, 11000);
+  setTimeout(pushLine, 15400);
+
+  // mute toggle
+  const m = document.getElementById("muteBtn");
+  let muted = false;
+  m.addEventListener("click", () => {
+    muted = !muted;
+    m.classList.toggle("muted", muted);
+    m.lastChild.textContent = muted ? "Muted" : "Mute";
+  });
+
+  // randomize wave heights
+  document.querySelectorAll(".wave i").forEach((i) => {
+    const dur = 0.85 + Math.random() * 0.5;
+    i.style.animationDuration = dur.toFixed(2) + "s";
+    i.style.height = (3 + Math.random() * 5).toFixed(0) + "px";
+  });
+</script>
+</body>
+</html>
