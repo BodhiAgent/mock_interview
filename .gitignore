@@ -8,3 +8,5 @@ data/*.db-shm
 data/*.db-wal
 *.tsbuildinfo
 .DS_Store
+.test/
+.playwright-mcp/

@@ -31,8 +31,10 @@ export function SessionView({ session, problem, initialTranscript }: Props) {
     initialTranscript.map((t) => ({ id: t.id, who: t.who, body: t.body, ts: t.ts })),
   );
 
+  // Persist a finalized turn to the DB. We only call this once per turn, after
+  // streaming settles, to avoid one row per token.
   const persistTranscript = useCallback(
-    async (msg: BodhiMessage) => {
+    async (msg: { who: BodhiMessage["who"]; body: string }) => {
       try {
         await fetch(`/api/sessions/${session.id}/transcript`, {
           method: "POST",
@@ -46,15 +48,65 @@ export function SessionView({ session, problem, initialTranscript }: Props) {
     [session.id],
   );
 
+  /**
+   * bodhiagent.live streams cumulative text — every WS frame contains the full
+   * turn so far ("Hello", "Hello.", "Hello. I", …). We coalesce successive
+   * frames from the same speaker into a single transcript row and debounce a
+   * final DB write so the transcript table has one row per turn, not one per
+   * token. A new speaker (or a new opening that doesn't extend the last text)
+   * starts a fresh row.
+   */
+  const flushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingFinal = useRef<{ who: BodhiMessage["who"]; body: string } | null>(null);
+
+  const scheduleFlush = useCallback(() => {
+    if (flushTimer.current) clearTimeout(flushTimer.current);
+    flushTimer.current = setTimeout(() => {
+      const m = pendingFinal.current;
+      pendingFinal.current = null;
+      flushTimer.current = null;
+      if (m) void persistTranscript(m);
+    }, 1200);
+  }, [persistTranscript]);
+
   const onBodhiMessage = useCallback(
     (msg: BodhiMessage) => {
-      setTranscript((prev) => [
-        ...prev,
-        { id: `bodhi-${msg.ts}-${Math.random()}`, who: msg.who, body: msg.body, ts: msg.ts },
-      ]);
-      void persistTranscript(msg);
+      setTranscript((prev) => {
+        // Look back at recent messages from the same speaker (within 30s) and
+        // either replace one we're extending, drop an exact duplicate, or
+        // collapse one that was a strict prefix of this one.
+        const RECENT_MS = 30_000;
+        const RECENT_LOOKBACK = 6;
+        const start = Math.max(0, prev.length - RECENT_LOOKBACK);
+        for (let i = prev.length - 1; i >= start; i--) {
+          const c = prev[i];
+          if (c.who !== msg.who) break;
+          if (msg.ts - c.ts > RECENT_MS) break;
+          if (c.body === msg.body) {
+            // Exact duplicate — drop.
+            return prev;
+          }
+          if (msg.who !== "iv" && msg.body.startsWith(c.body)) {
+            // New extends candidate's body — replace candidate.
+            const updated = [...prev];
+            updated[i] = { ...c, body: msg.body, ts: msg.ts };
+            return updated;
+          }
+          if (msg.who !== "iv" && c.body.startsWith(msg.body)) {
+            // Candidate is already a superset — drop new.
+            return prev;
+          }
+        }
+        return [
+          ...prev,
+          { id: `${msg.who}-${msg.ts}-${Math.random()}`, who: msg.who, body: msg.body, ts: msg.ts },
+        ];
+      });
+
+      pendingFinal.current = { who: msg.who, body: msg.body };
+      scheduleFlush();
     },
-    [persistTranscript],
+    [scheduleFlush],
   );
 
   const bodhi = useBodhi({
@@ -144,7 +196,7 @@ export function SessionView({ session, problem, initialTranscript }: Props) {
     (text: string) => {
       const ts = Date.now();
       setTranscript((prev) => [...prev, { id: `iv-${ts}`, who: "iv", body: text, ts }]);
-      void persistTranscript({ who: "iv", body: text, ts });
+      void persistTranscript({ who: "iv", body: text });
       const delivered = bodhi.send(text);
       if (!delivered) {
         // Echo a system note.

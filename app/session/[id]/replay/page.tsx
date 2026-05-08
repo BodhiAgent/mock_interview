@@ -51,6 +51,8 @@ export default async function ReplayPage({ params }: { params: Promise<{ id: str
               background: "var(--bg-1)",
               padding: 16,
               maxHeight: 600,
+              maskImage: "none",
+              WebkitMaskImage: "none",
             }}
           >
             {transcript.length === 0 && (
