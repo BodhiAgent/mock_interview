@@ -5,11 +5,20 @@ import { getProblem, type Problem } from "./problems";
 
 /**
  * In-memory map of live sandboxes keyed by sessionId.
+ *
  * The sandbox handle isn't serializable, so we keep it in process memory and
  * tear it down when the session ends. SQLite remains the source of truth for
  * the durable bits (code, transcript, runs).
+ *
+ * NOTE: pinned onto globalThis. Next.js dev mode bundles each route handler
+ * with its own module graph, which would otherwise give every route its own
+ * empty Map — so the `/run` endpoint wouldn't see the sandbox the `POST
+ * /sessions` endpoint created. globalThis survives module duplication and
+ * (in dev) HMR.
  */
-const sandboxes = new Map<string, Sandbox>();
+const G = globalThis as unknown as { __bodhiSandboxes?: Map<string, Sandbox> };
+const sandboxes: Map<string, Sandbox> = G.__bodhiSandboxes ?? new Map();
+G.__bodhiSandboxes = sandboxes;
 
 export type CreateSessionResult = {
   sessionId: string;

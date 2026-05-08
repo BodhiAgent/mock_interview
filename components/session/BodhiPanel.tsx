@@ -161,16 +161,19 @@ export function BodhiPanel({
 }
 
 function Wave({ level }: { level: number }) {
-  // 32 bars, base height + multiplier driven by level + per-bar phase.
-  const bars = Array.from({ length: 32 });
+  // Pre-compute heights on the client only to avoid SSR hydration mismatches.
+  const [heights, setHeights] = useState<number[]>(() => new Array(32).fill(4));
+  useEffect(() => {
+    setHeights(Array.from({ length: 32 }, () => 3 + Math.random() * 5));
+  }, []);
   return (
     <div className="wave" aria-hidden="true">
-      {bars.map((_, i) => (
+      {heights.map((h, i) => (
         <i
           key={i}
           style={{
             animationDelay: `${(i * 0.04).toFixed(2)}s`,
-            height: `${(3 + Math.random() * 5).toFixed(0)}px`,
+            height: `${h.toFixed(0)}px`,
             opacity: level > 0 ? 0.85 : 0.4,
             animationPlayState: level > 0 ? "running" : "paused",
           }}

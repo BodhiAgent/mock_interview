@@ -1,9 +1,15 @@
 /**
  * Daytona sandbox wrapper.
  *
- * If DAYTONA_API_KEY is set, uses the @daytonaio/sdk to create a real sandbox
+ * If DAYTONA_API_KEY is set, uses @daytonaio/sdk to create a real sandbox
  * per session and run code remotely. If unset, falls back to executing Python
  * locally in a temp dir so the app remains end-to-end runnable for development.
+ *
+ * SDK shape verified against @daytonaio/sdk@0.27:
+ *   - daytona.create({ language, ... }) → Sandbox
+ *   - sandbox.fs.uploadFile(Buffer, "/path/to/file")
+ *   - sandbox.process.executeCommand(cmd, cwd, env?, timeoutSec) → { result, exitCode }
+ *   - sandbox.delete()
  */
 
 import { spawn } from "node:child_process";
@@ -34,90 +40,98 @@ export function isUsingDaytona(): boolean {
 
 export async function createSandbox(): Promise<Sandbox> {
   if (DAYTONA_KEY) {
-    return createDaytonaSandbox();
+    try {
+      return await createDaytonaSandbox();
+    } catch (e) {
+      console.error("[daytona] create failed; falling back to local sandbox:", e);
+      return createLocalSandbox();
+    }
   }
   return createLocalSandbox();
 }
 
 /* ──────────────────── Daytona-backed implementation ──────────────────── */
 
-async function createDaytonaSandbox(): Promise<Sandbox> {
-  // Lazy-import so the SDK is only loaded when actually used.
-  // The shape below matches the documented surface in DESIGN.md / daytona docs.
-  // If the SDK contract differs at runtime, errors surface to the route handler
-  // which renders them in the browser console pane.
-  const mod = await import("@daytonaio/sdk").catch(() => null);
-  if (!mod) {
-    console.warn("[daytona] @daytonaio/sdk not installed — falling back to local sandbox");
-    return createLocalSandbox();
-  }
-
-  // The SDK exposes a default class; instantiate with the API key.
-  const Daytona = (mod as { Daytona?: new (cfg: { apiKey: string }) => unknown }).Daytona;
-  if (!Daytona) {
-    console.warn("[daytona] SDK shape unexpected — falling back to local sandbox");
-    return createLocalSandbox();
-  }
-  const client = new Daytona({ apiKey: DAYTONA_KEY! }) as {
-    create: (opts?: unknown) => Promise<DaytonaSandboxLike>;
+type DaytonaSDK = {
+  Daytona: new (cfg: { apiKey: string; target?: string }) => DaytonaClient;
+};
+type DaytonaClient = {
+  create: (params?: {
+    language?: "python" | "typescript" | "javascript";
+    image?: string;
+    labels?: Record<string, string>;
+    autoStopInterval?: number;
+    autoDeleteInterval?: number;
+    ephemeral?: boolean;
+  }) => Promise<DaytonaSandboxLike>;
+};
+type DaytonaSandboxLike = {
+  id: string;
+  fs: {
+    uploadFile: (source: Buffer | string, destination: string, timeoutSec?: number) => Promise<void>;
+    createFolder?: (path: string, mode?: string) => Promise<void>;
   };
+  process: {
+    executeCommand: (
+      command: string,
+      cwd?: string,
+      env?: Record<string, string>,
+      timeoutSec?: number,
+    ) => Promise<{ result?: string; exitCode?: number; output?: string }>;
+  };
+  getRootDir: () => Promise<string>;
+  delete: () => Promise<void>;
+};
 
-  const remote = await client.create({
-    image: "python:3.12-slim",
-    cpu: 1,
-    memory: 1,
+async function createDaytonaSandbox(): Promise<Sandbox> {
+  const mod = (await import("@daytonaio/sdk")) as unknown as DaytonaSDK;
+  const client = new mod.Daytona({
+    apiKey: DAYTONA_KEY!,
+    target: process.env.DAYTONA_TARGET || undefined,
   });
 
+  const remote = await client.create({
+    language: "python",
+    autoStopInterval: 60, // stop after 60 min idle
+    autoDeleteInterval: 60 * 24, // delete after 24h
+  });
+
+  const rootDir = await remote.getRootDir();
+
   return {
-    id: String(remote.id ?? `daytona-${Date.now()}`),
+    id: remote.id,
+
     writeFile: async (rel, contents) => {
-      const target = path.posix.join("/work", rel);
-      // Some SDK versions: sandbox.fs.writeFile(path, contents)
-      if (remote.fs?.writeFile) {
-        await remote.fs.writeFile(target, contents);
-      } else if (remote.process?.exec) {
-        // Fallback: heredoc into the file if no fs API.
-        const escaped = contents.replace(/'/g, `'\\''`);
-        await remote.process.exec(`mkdir -p $(dirname ${target}) && printf '%s' '${escaped}' > ${target}`);
-      } else {
-        throw new Error("Daytona SDK exposes neither fs.writeFile nor process.exec");
-      }
+      const dst = path.posix.join(rootDir, rel);
+      await remote.fs.uploadFile(Buffer.from(contents, "utf8"), dst);
     },
+
     exec: async (cmd, opts) => {
       const t0 = Date.now();
-      if (!remote.process?.exec) throw new Error("Daytona SDK is missing process.exec");
-      const r = await remote.process.exec(cmd, { cwd: opts?.cwd ?? "/work", timeout: opts?.timeoutMs });
+      const cwd = opts?.cwd ? path.posix.join(rootDir, opts.cwd) : rootDir;
+      const timeoutSec = Math.max(1, Math.ceil((opts?.timeoutMs ?? 10_000) / 1000));
+      const r = await remote.process.executeCommand(cmd, cwd, undefined, timeoutSec);
+      // SDK merges stdout+stderr into `result`. We surface it as stdout when the
+      // command succeeded and as stderr otherwise so the UI's red styling kicks in.
+      const out = r.result ?? r.output ?? "";
+      const exit = r.exitCode ?? 0;
       return {
-        stdout: r.stdout ?? "",
-        stderr: r.stderr ?? "",
-        exitCode: r.exitCode ?? 0,
+        stdout: exit === 0 ? out : "",
+        stderr: exit !== 0 ? out : "",
+        exitCode: exit,
         durationMs: Date.now() - t0,
       };
     },
+
     destroy: async () => {
       try {
-        if (remote.delete) await remote.delete();
-        else if (remote.destroy) await remote.destroy();
+        await remote.delete();
       } catch (e) {
-        console.warn("[daytona] destroy failed:", e);
+        console.warn("[daytona] sandbox.delete() failed:", e);
       }
     },
   };
 }
-
-type DaytonaSandboxLike = {
-  id?: string;
-  fs?: { writeFile?: (path: string, contents: string) => Promise<void> };
-  process?: {
-    exec: (cmd: string, opts?: { cwd?: string; timeout?: number }) => Promise<{
-      stdout?: string;
-      stderr?: string;
-      exitCode?: number;
-    }>;
-  };
-  delete?: () => Promise<void>;
-  destroy?: () => Promise<void>;
-};
 
 /* ──────────────────── Local fallback implementation ──────────────────── */
 
