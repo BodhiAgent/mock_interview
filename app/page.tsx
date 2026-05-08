@@ -1,7 +1,6 @@
-import Link from "next/link";
 import { listProblems } from "@/lib/problems";
 import { isUsingDaytona } from "@/lib/daytona";
-import { StartButton } from "./_StartButton";
+import { ProblemRow } from "./_ProblemRow";
 
 export const dynamic = "force-dynamic";
 
@@ -25,28 +24,20 @@ export default function CatalogPage() {
       </div>
 
       <div className="problem-list">
-        {problems.map((p, i) => (
-          <Link key={p.id} href={`/session/start?slug=${p.slug}`} className="problem-row" style={{ textDecoration: "none" }}>
-            <span className="num">{p.num}</span>
-            <span className="title">{p.title}</span>
-            <span className="tags">
-              {p.tags.slice(0, 2).map((t) => (
-                <span key={t} className="pill tag">
-                  {t}
-                </span>
-              ))}
-              <span className={`pill ${p.difficulty === "easy" ? "easy" : p.difficulty === "medium" ? "med" : "hard"}`}>
-                {p.difficulty[0].toUpperCase() + p.difficulty.slice(1)}
-              </span>
-            </span>
-            <span className="acc">{p.accRate.toFixed(1)}%</span>
-            <span className="arrow">→</span>
-          </Link>
+        {problems.map((p) => (
+          <ProblemRow
+            key={p.id}
+            problem={{
+              id: p.id,
+              num: p.num,
+              slug: p.slug,
+              title: p.title,
+              difficulty: p.difficulty,
+              tags: p.tags,
+              accRate: p.accRate,
+            }}
+          />
         ))}
-      </div>
-
-      <div style={{ marginTop: 24 }}>
-        <StartButton problems={problems.map((p) => ({ slug: p.slug, title: p.title }))} />
       </div>
 
       <div className="catalog-foot">
