@@ -26,8 +26,8 @@
 
   --header-h: 48px;
   --rail-w:   48px;
-  --bodhi-w:  340px;
-  --problem-w: 36%;
+  --bodhi-w:  480px;
+  --problem-w: 32%;
 
   --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
   --sans: "Geist", -apple-system, "Segoe UI", system-ui, sans-serif;
@@ -726,5 +726,40 @@ a { color: inherit; text-decoration: none; }
 
 /* responsive */
 @media (max-width: 1280px) {
-  :root { --bodhi-w: 300px; --problem-w: 34%; }
+  :root { --bodhi-w: 420px; --problem-w: 30%; }
 }
+
+/* voice-iframe variant of the bodhi panel */
+.bodhi.voice {
+  grid-template-rows: auto 1fr;
+}
+.bodhi-voice {
+  position: relative;
+  background: #000;
+  overflow: hidden;
+}
+.bodhi-voice iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+.bodhi-mode {
+  display: inline-flex;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-m);
+  overflow: hidden;
+  background: var(--bg-1);
+}
+.bodhi-mode button {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  color: var(--fg-3);
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.bodhi-mode button + button { border-left: 1px solid var(--line-2); }
+.bodhi-mode button:hover { color: var(--fg-1); background: var(--bg-hover); }
+.bodhi-mode button.active { color: var(--fg); background: var(--bg-2); }

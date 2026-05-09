@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { BodhiStatus } from "@/lib/useBodhi";
+import { BodhiVoiceFrame } from "./BodhiVoiceFrame";
 
 export type TranscriptItem = {
   id: string | number;
@@ -10,7 +11,10 @@ export type TranscriptItem = {
   ts: number;
 };
 
+export type BodhiMode = "voice" | "text";
+
 type Props = {
+  sessionId: string;
   status: BodhiStatus;
   muted: boolean;
   audioLevel: number;
@@ -20,9 +24,12 @@ type Props = {
   onMute: () => void;
   onEnd: () => void;
   startedAt: number;
+  mode: BodhiMode;
+  onModeChange: (mode: BodhiMode) => void;
 };
 
 export function BodhiPanel({
+  sessionId,
   status,
   muted,
   audioLevel,
@@ -32,6 +39,8 @@ export function BodhiPanel({
   onMute,
   onEnd,
   startedAt,
+  mode,
+  onModeChange,
 }: Props) {
   const [draft, setDraft] = useState("");
   const txRef = useRef<HTMLDivElement>(null);
@@ -51,14 +60,35 @@ export function BodhiPanel({
           ? { verb: "Error", obj: "tap Reconnect" }
           : { verb: "Offline", obj: "voice unavailable" };
 
+  if (mode === "voice") {
+    return (
+      <aside className="bodhi voice">
+        <header className="bodhi-head">
+          <div className="ttl">
+            <span className="live-dot" style={{ background: "#22c55e", boxShadow: "0 0 8px #22c55e" }} />
+            Bodhi · Voice
+          </div>
+          <div className="bodhi-mode" role="tablist">
+            <button type="button" className="active" onClick={() => onModeChange("voice")}>Voice</button>
+            <button type="button" onClick={() => onModeChange("text")}>Text</button>
+          </div>
+        </header>
+        <BodhiVoiceFrame sessionId={sessionId} />
+      </aside>
+    );
+  }
+
   return (
     <aside className="bodhi">
       <header className="bodhi-head">
         <div className="ttl">
           <span className={`live-dot ${dotClass}`} />
-          Bodhi · Voice Agent
+          Bodhi · Text
         </div>
-        <div className="meta-r">{status === "connected" ? "wss · live" : "wss · idle"}</div>
+        <div className="bodhi-mode" role="tablist">
+          <button type="button" onClick={() => onModeChange("voice")}>Voice</button>
+          <button type="button" className="active" onClick={() => onModeChange("text")}>Text</button>
+        </div>
       </header>
 
       <section className="agent">

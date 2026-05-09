@@ -6,7 +6,7 @@ import { Topbar } from "@/components/Topbar";
 import { Rail } from "@/components/Rail";
 import { ProblemPane } from "@/components/session/ProblemPane";
 import { CodeLab, type RunEvent } from "@/components/session/CodeLab";
-import { BodhiPanel, type TranscriptItem } from "@/components/session/BodhiPanel";
+import { BodhiPanel, type TranscriptItem, type BodhiMode } from "@/components/session/BodhiPanel";
 import { useBodhi, type BodhiMessage } from "@/lib/useBodhi";
 import type { Problem } from "@/lib/problems";
 import type { SessionRow, TranscriptRow } from "@/lib/db";
@@ -30,6 +30,8 @@ export function SessionView({ session, problem, initialTranscript }: Props) {
   const [transcript, setTranscript] = useState<TranscriptItem[]>(
     initialTranscript.map((t) => ({ id: t.id, who: t.who, body: t.body, ts: t.ts })),
   );
+
+  const [mode, setMode] = useState<BodhiMode>("voice");
 
   // Persist a finalized turn to the DB. We only call this once per turn, after
   // streaming settles, to avoid one row per token.
@@ -112,6 +114,9 @@ export function SessionView({ session, problem, initialTranscript }: Props) {
   const bodhi = useBodhi({
     bodhiUserId: session.bodhi_user_id,
     onMessage: onBodhiMessage,
+    // In voice mode the iframe owns the Bodhi conversation; our text WS would
+    // just open a parallel session and double-bill. Connect only in text mode.
+    enabled: mode === "text",
   });
 
   // Persist code edits (debounced).
@@ -239,6 +244,7 @@ export function SessionView({ session, problem, initialTranscript }: Props) {
           bodhiConnected={bodhi.status === "connected"}
         />
         <BodhiPanel
+          sessionId={session.id}
           status={bodhi.status}
           muted={bodhi.muted}
           audioLevel={bodhi.audioLevel}
@@ -248,6 +254,8 @@ export function SessionView({ session, problem, initialTranscript }: Props) {
           onMute={bodhi.toggleMute}
           onEnd={handleEnd}
           startedAt={session.started_at}
+          mode={mode}
+          onModeChange={setMode}
         />
       </main>
     </div>
